@@ -1,0 +1,204 @@
+---
+title: "Modular"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(tidyverse)
+library(babynames)
+data(births)
+data(babynames)
+```
+
+```{r}
+babynames %>%
+  filter(name == "Collin") %>%
+  group_by(year) %>%
+  summarise(overall_percentage = 100 * sum(0.5 * prop)) %>%
+  arrange(desc(overall_percentage)) %>%
+  head(1) %>%
+  select(year, overall_percentage)
+
+```
+```{r}
+most_popular_year <- function(name_arg)
+{
+  babynames %>%
+    filter(name == name_arg) %>%
+    group_by(year) %>%
+    summarise(
+      name = name[1],
+      overall_percentage = 100 * sum(0.5 * prop)
+    ) %>%
+    arrange(desc(overall_percentage)) %>%
+    head(1) %>%
+    select(name, year, overall_percentage)
+}
+```
+```{r}
+most_popular_year("Collin")
+most_popular_year("Michelle")
+most_popular_year("Orion")
+most_popular_year("Michael")
+most_popular_year("Jess")
+most_popular_year("Maddy")
+most_popular_year("Emma")
+most_popular_year("Ritika")
+most_popular_year("Saketh")
+most_popular_year("Veda")
+most_popular_year("Ari")
+most_popular_year("Katie")
+most_popular_year("Justin")
+most_popular_year("Conrad")
+most_popular_year("Sarah")
+most_popular_year("Scott")
+most_popular_year("Minh")
+most_popular_year("Xander")
+most_popular_year("Ashlyn")
+most_popular_year("Matthew")
+```
+
+```{r}
+my_name_list <- c("Collin", "Michelle", "Orion", "Michael", "Jess", "Maddy", "Emma", "Ritika", "Saketh", "Veda", "Ari", "Katie", "Justin", "Matthew", "Conrad", "Sarah", "Scott", "Minh", "Xander", "Ashlyn")
+
+lapply(my_name_list, FUN = most_popular_year) %>%
+  bind_rows()
+
+
+```
+
+```{r}
+formals(most_popular_year)
+
+
+```
+```{r}
+most_popular_years <- function(name_arg, num_years = 1)
+{
+  babynames %>%
+    filter(name == name_arg) %>%
+    group_by(year) %>%
+    summarise(
+      name = name[1],
+      overall_percentage = 100 * sum(0.5 * prop)
+    ) %>%
+    arrange(desc(overall_percentage)) %>%
+    head(n = num_years) %>%
+    select(name, year, overall_percentage)
+}
+
+most_popular_years("Collin", 5)
+
+```
+
+```{r}
+top_10 <- function(data)
+
+{
+  data %>%
+    group_by(name) %>%
+    summarise(births = sum(n)) %>%
+    arrange(desc(births)) %>%
+    head(10)
+}
+
+top_10(data = babynames)
+
+```
+```{r}
+top_by_decade <-
+  babynames %>%
+  mutate(decade = 10 * floor(year / 10)) %>%
+  group_by(decade) %>%
+  do(top_10(data = .))
+
+top_by_decade #%>% summarise(n())
+```
+```{r}
+top_by_decade[27,]
+
+##This means that when Anna was most popular in the 1900s, 55,099 babies were given that name
+
+```
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+library(nycflights13)
+data(flights)
+```
+
+```{r}
+most_popular_dest <- function(name_arg)
+{
+flights %>%
+    filter(carrier == name_arg) %>%
+    filter(origin == "JFK") %>%
+    filter(year == "2013") %>%
+  select(-distance) %>%
+  select(-time_hour) %>%
+  select(-arr_delay, -sched_arr_time, -dep_delay, -arr_time, -dep_time, -sched_dep_time, -air_time, -hour, -minute) %>%
+   arrange(dest) %>%
+  group_by(carrier, origin, dest) %>%
+  tally(sort = TRUE) %>%
+  head(n = 5) %>%
+  select(carrier, dest, n)
+}
+
+most_popular_dest("DL")
+most_popular_dest("UA")
+most_popular_dest("AA")
+
+##AA and DL share LAX and SFO ase the top 5 most popular destination sites
+```
+```{r}
+airline_list <- c("AA", "DL", "UA")
+lapply(airline_list, FUN = most_popular_dest) %>%
+  bind_rows()
+
+```
+
+
+Write a function that, for a given airport code (e.g. BDL), will retrieve the five most common carriers that service that airport from NYC in 2013, and what their average arrival delay time was.
+```{r}
+most_common_carrier <- function(name_arg)
+{
+  flights %>%
+    filter(dest == name_arg) %>%
+    filter(origin == "JFK") %>%
+    filter(year == "2013") %>%
+    select(-distance, -time_hour, -sched_arr_time, -dep_delay, -arr_time, -dep_time, -sched_dep_time, -air_time, -hour, -minute, -tailnum, -year, -month, -day, -flight) %>%
+    arrange(carrier)  %>%
+    group_by(carrier, dest) %>%
+    summarise(
+      total = sum(n()),
+      mean(arr_delay, na.rm = T)
+    ) %>%
+    arrange(desc(total)) %>%
+    head(n = 5)
+}
+
+most_common_carrier("RSW")
+most_common_carrier("LAS")
+```
+```{r}
+airports <- c("LAX", "SFO", "BDL")
+
+lapply(airports, FUN = most_common_carrier) %>%
+  bind_rows()
+
+##There are no flights from JFK to BDL
+```
+
